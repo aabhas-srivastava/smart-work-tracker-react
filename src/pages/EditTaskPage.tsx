@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import { taskSchema } from "../validation/taskSchema";
 import type { Task, TaskStatus, TaskPriority } from "../types/task";
 import Header from "../components/Header";
 
@@ -15,21 +16,6 @@ export default function EditTaskPage({ tasks, onUpdate }: EditTaskPageProps) {
   const taskId = Number(id);
   const existingTask = tasks.find((t) => t.id === taskId);
 
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<TaskStatus | "">("");
-  const [priority, setPriority] = useState<TaskPriority | "">("");
-  const [tags, setTags] = useState("");
-
-  useEffect(() => {
-    if (existingTask) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTitle(existingTask.title);
-      setStatus(existingTask.status);
-      setPriority(existingTask.priority);
-      setTags(existingTask.tags.join(", "));
-    }
-  }, [existingTask]);
-
   if (!existingTask) {
     return (
       <div className="container">
@@ -40,17 +26,21 @@ export default function EditTaskPage({ tasks, onUpdate }: EditTaskPageProps) {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const initialValues = {
+    id: existingTask.id,
+    title: existingTask.title,
+    status: existingTask.status,
+    priority: existingTask.priority,
+    tags: existingTask.tags.join(", "),
+  };
 
-    if (!status || !priority) return;
-
+  const handleSubmit = (values: typeof initialValues) => {
     const updatedTask: Task = {
       id: existingTask.id,
-      title: title.trim(),
-      status,
-      priority,
-      tags: tags
+      title: values.title.trim(),
+      status: values.status as TaskStatus,
+      priority: values.priority as TaskPriority,
+      tags: values.tags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
@@ -67,56 +57,65 @@ export default function EditTaskPage({ tasks, onUpdate }: EditTaskPageProps) {
       <section className="add-task">
         <h2>Edit Task #{existingTask.id}</h2>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
-            <input type="number" value={existingTask.id} disabled />
-            <input
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={taskSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <div className="form-row">
+                <div>
+                  <Field type="number" name="id" disabled />
+                  <ErrorMessage name="id" component="div" className="error" />
+                </div>
 
-          <div className="form-row">
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
-              required
-            >
-              <option value="Todo">Todo</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
+                <div>
+                  <Field type="text" name="title" placeholder="Title" />
+                  <ErrorMessage name="title" component="div" className="error" />
+                </div>
+              </div>
 
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-              required
-            >
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
+              <div className="form-row">
+                <div>
+                  <Field as="select" name="status">
+                    <option value="Todo">Todo</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </Field>
+                  <ErrorMessage name="status" component="div" className="error" />
+                </div>
 
-            <input
-              type="text"
-              placeholder="Tags (comma separated)"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              required
-            />
-          </div>
+                <div>
+                  <Field as="select" name="priority">
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </Field>
+                  <ErrorMessage name="priority" component="div" className="error" />
+                </div>
 
-          <button type="submit" className="btn btn-add">
-            Save Changes
-          </button>
+                <div>
+                  <Field
+                    type="text"
+                    name="tags"
+                    placeholder="Tags (comma separated)"
+                  />
+                  <ErrorMessage name="tags" component="div" className="error" />
+                </div>
+              </div>
 
-          <Link to="/" style={{ marginLeft: "12px" }}>
-            Cancel
-          </Link>
-        </form>
+              <button type="submit" className="btn btn-add" disabled={isSubmitting}>
+                Save Changes
+              </button>
+
+              <Link to="/" style={{ marginLeft: "12px" }}>
+                Cancel
+              </Link>
+            </Form>
+          )}
+        </Formik>
       </section>
     </div>
   );
