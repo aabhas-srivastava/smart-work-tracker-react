@@ -5,6 +5,7 @@ import AddTaskPage from "./pages/AddTaskPage";
 import EditTaskPage from "./pages/EditTaskPage";
 import type { Task, TaskStatus, TaskPriority } from "./types/task";
 import "./index.css";
+import {getTasks} from "./api/tasksApi";
 
 const STORAGE_KEY = "tasks";
 const PRIORITIES: TaskPriority[] = ["High", "Medium", "Low"];
@@ -57,31 +58,17 @@ export default function App() {
 
   useEffect(() => {
     if (tasks.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    const API_URL = import.meta.env.VITE_API_URL;
-
-    if (!API_URL) {
-      setError("api missing. check your .env file");
-      setLoading(false);
-      return;
-    }
-
-    fetch(API_URL)
+    getTasks()
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch tasks");
-        return res.json();
-      })
-      .then((data) => {
         if (cancelled) return;
-        const mapped = data.map(mapTodoToTask);
-        setTasks(mapped);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+        setTasks(res);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(res));
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || "Something went wrong");
