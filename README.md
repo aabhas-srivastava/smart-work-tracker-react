@@ -1,75 +1,46 @@
-# React + TypeScript + Vite
+Student Management Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A student management admin application built with Next.js (App Router), React and TypeScript. It lets an admin or trainer add, edit, view, search, filter and delete students, with a live summary dashboard and a multi-step form with per-step validation.
 
-Currently, two official plugins are available:
+The app has no backend. All data is stored in the browser’s localStorage through a dedicated async-style service layer, so a real API could be swapped in later without changing any component code.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Features
+Dashboard: Reusable Stat Cards for Total Students, Active Students, Completed Students, Average Score and Pending Assignments, all calculated live from stored data.
+Student data table: Pagination, column sorting, and View / Edit / Delete row actions.
+Search and filters: Debounced search by name or email, filters by course, status and score range (0–50, 51–75, 76–100), with Apply and Reset actions. All filtering runs client-side.
+Multi-step Add Student form: A three-step Stepper (Personal Info → Course Info → Confirmation) built with Formik and Yup. Each step validates before the user can continue, and the last step shows a read-only summary before submitting.
+Validation: Required fields, email format and uniqueness across existing students, and numeric phone validation.
+Student details page: Personal and course information, status, score, and a progress bar tied to the score.
+Edit student: Reuses the same form and Yup schema, pre-filled with existing data, and returns to the list after saving.
+Delete with confirmation: A confirm dialog before deletion and a React Toastify success notification afterwards.
+Loading, error and empty states: A loading indicator while data resolves, an “Unable to load students” message with a Retry button on failure, and a “No students found” message with an Add Student button when the list is empty.
+Tech Stack
+Area	Technology
+Framework	Next.js (App Router)
+Language	TypeScript
+UI and icons	Material UI, MUI Icons
+Data table	MUI DataGrid
+Forms and validation	Formik, Yup
+Notifications	React Toastify
+State and data	React Hooks (useState, useEffect, useContext, useRouter, useParams), custom useStudents() hook
+Storage	Browser localStorage via a service layer
+Routes
+Route	Page
+/	Home
+/dashboard	Dashboard with summary stats
+/students	Student list with search, filters and table
+/students/add	Add student (multi-step form)
+/students/:id	Student details
+/students/:id/edit	Edit student
+Architecture
 
-## React Compiler
+Components never touch localStorage directly. All data operations go through services/studentService.ts, which exposes async functions (getStudents, getStudentById, createStudent, updateStudent, deleteStudent). A useStudents() hook wraps the service for components, and an AppContext shares the current admin info (shown in the header) without prop drilling.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Getting Started
+bash
+git clone <your-repo-url>
+cd <your-project-folder>
+npm install
+npm run dev
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+Then open http://localhost:3000.
